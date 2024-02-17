@@ -22,6 +22,8 @@ async function renderJSXToClientJSX(
           ...jsx,
           props: await renderJSXToClientJSX(jsx.props),
         };
+      } else if (jsx.type === Symbol.for("react.fragment")) {
+        return renderJSXToClientJSX(jsx.props.children);
       } else if (typeof jsx.type === "function") {
         const Component = jsx.type;
         const props = jsx.props;

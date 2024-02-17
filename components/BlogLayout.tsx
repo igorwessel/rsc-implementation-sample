@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Footer from "./Footer";
+import FragmentComponent from "./FragmentComponent";
 
 type BlogLayoutProps = {
   children: ReactNode;
@@ -20,7 +21,10 @@ function BlogLayout({ children }: BlogLayoutProps) {
           <input />
           <hr />
         </nav>
-        <main>{children}</main>
+        <main>
+          <FragmentComponent />
+          {children}
+        </main>
         <Footer author={author} />
       </body>
     </html>
