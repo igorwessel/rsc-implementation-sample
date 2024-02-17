@@ -106,7 +106,7 @@ const server = Bun.serve({
       if (url.pathname.includes(".ico"))
         return new Response("", { status: 404 });
 
-      if (url.pathname.includes(".js")) {
+      if (url.pathname.includes("client.js")) {
         const body = await Bun.file(url.pathname.slice(1)).text();
         const response = new Response(body);
         response.headers.set("Content-Type", "text/javascript");
