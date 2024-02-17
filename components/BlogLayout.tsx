@@ -12,7 +12,6 @@ function BlogLayout({ children }: BlogLayoutProps) {
     <html>
       <head>
         <title>Blog</title>
-        <script src="./client.js" />
       </head>
       <body>
         <nav>

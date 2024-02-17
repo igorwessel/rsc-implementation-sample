@@ -1,43 +1,10 @@
+import { renderToString } from "react-dom/server";
+
 import Router from "./components/Router";
 
-async function renderJSXToHtml(jsx: unknown): Promise<string | undefined> {
-  if (typeof jsx === "string" || typeof jsx === "number") {
-    return Bun.escapeHTML(jsx);
-  } else if (jsx === null || jsx === "boolean" || jsx === undefined) {
-    return "";
-  } else if (Array.isArray(jsx)) {
-    const childs = await Promise.all(jsx.map(renderJSXToHtml));
-    return childs.join("");
-  } else if (typeof jsx === "object") {
-    if (jsx.$$typeof === Symbol.for("react.element")) {
-      if (typeof jsx.type === "string") {
-        let html = `<${jsx.type}`;
-
-        for (let key in jsx.props) {
-          if (key === "children") continue;
-          if (key === "className") {
-            html += ` class="${jsx.props[key]}"`;
-          } else {
-            html += ` ${key}="${Bun.escapeHTML(jsx.props[key])}"`;
-          }
-        }
-
-        html += ">";
-        html += await renderJSXToHtml(jsx.props.children);
-        html += `</${jsx.type}>`;
-        return html;
-      } else if (typeof jsx.type === "function") {
-        const Component = jsx.type;
-        const props = jsx.props;
-        const componentJsx = await Component(props);
-
-        return renderJSXToHtml(componentJsx);
-      } else throw new Error("Not implemented");
-    } else throw new Error(`Cannot render unsupported object: ${jsx}`);
-  } else throw new Error(`Cannot figure JSX type: ${jsx}`);
-}
-
-async function renderJSXToClientJSX(jsx: unknown) {
+async function renderJSXToClientJSX(
+  jsx: unknown
+): Promise<Record<string, unknown>> {
   if (
     typeof jsx === "string" ||
     typeof jsx === "number" ||
@@ -75,8 +42,46 @@ async function renderJSXToClientJSX(jsx: unknown) {
   } else throw new Error(`Cannot figure JSX type: ${jsx}`);
 }
 
+function stringifyJSX(key: string, value: unknown) {
+  if (value === Symbol.for("react.element")) {
+    return "$R";
+  } else if (typeof value === "string" && value.startsWith("$")) {
+    return `$${value}`;
+  } else {
+    return value;
+  }
+}
+
 async function sendHtml(jsx: unknown) {
-  const html = await renderJSXToHtml(jsx);
+  const clientJSX = await renderJSXToClientJSX(jsx);
+  let html = await renderToString(clientJSX);
+
+  const clientJSXString = JSON.stringify(clientJSX, stringifyJSX);
+  html += `
+    <script id="initial_jsx">
+      window.__INITIAL_CLIENT_JSX__ = ${JSON.stringify(clientJSXString).replace(
+        /</g,
+        "\\u003c"
+      )};
+
+      window.addEventListener("load", () => {
+        delete window.__INITIAL_CLIENT_JSX__;
+        document.getElementById("initial_jsx").remove();
+      });
+    </script>
+  `;
+  html += `
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@canary",
+        "react-dom/client": "https://esm.sh/react-dom@canary/client"
+      }
+    }
+    </script>
+    <script type="module" src="/client.js"></script>
+`;
+
   const response = new Response(html);
 
   response.headers.set("Content-Type", "text/html");
@@ -86,7 +91,7 @@ async function sendHtml(jsx: unknown) {
 
 async function sendJSX(jsx: unknown) {
   const clientJsx = await renderJSXToClientJSX(jsx);
-  const clientJsxString = JSON.stringify(clientJsx, null, 2);
+  const clientJsxString = JSON.stringify(clientJsx, stringifyJSX, 2);
   const response = new Response(clientJsxString);
   response.headers.set("Content-Type", "application/json");
   return response;
@@ -110,6 +115,7 @@ const server = Bun.serve({
       }
 
       if (url.searchParams.has("jsx")) {
+        url.searchParams.delete("jsx");
         return await sendJSX(<Router url={url} />);
       } else {
         return await sendHtml(<Router url={url} />);

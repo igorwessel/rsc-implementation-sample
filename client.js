@@ -1,27 +1,45 @@
+import { hydrateRoot } from "react-dom/client";
+
+const root = hydrateRoot(document, getInitialClientJsx());
+
 let currentPathName = window.location.pathname;
 
-async function navigate(url) {
-  currentPathName = url;
-  const res = await fetch(url + "?jsx");
-  const html = await res.text();
+async function navigate(pathname) {
+  currentPathName = pathname;
+  const clientJSX = await fetchClientJsx(pathname);
 
-  if (url === currentPathName) {
-    alert(html);
-    const parser = new DOMParser();
-    const newDocument = parser.parseFromString(html, "text/html");
-
-    document.body.replaceWith(newDocument.body);
-    document.title = newDocument.title;
+  if (pathname === currentPathName) {
+    root.render(clientJSX);
   }
+}
+
+function getInitialClientJsx() {
+  const clientJSX = JSON.parse(window.__INITIAL_CLIENT_JSX__, reviveJSX);
+  return clientJSX;
+}
+
+function reviveJSX(_, value) {
+  if (value === "$R") {
+    return Symbol.for("react.element");
+  } else if (typeof value === "string" && value.startsWith("$$")) {
+    return value.slice(1);
+  } else {
+    return value;
+  }
+}
+
+async function fetchClientJsx(pathname) {
+  const response = await fetch(`${pathname}?jsx`);
+  const clientJsxString = await response.text();
+  const clientJSX = JSON.parse(clientJsxString, reviveJSX);
+
+  return clientJSX;
 }
 
 window.addEventListener(
   "click",
   (e) => {
     if (e.target.tagName !== "A") {
-      // e.preventDefault()
-      // window.history.pushState({}, "", e.target.href)
-      // window.dispatchEvent(new PopStateEvent("popstate"))
       return;
     }
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
