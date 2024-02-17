@@ -10,7 +10,9 @@ function FragmentComponent() {
   return (
     <>
       <p>Fragment</p>
+      <hr />
       <AnotherComponent />
+      <hr />
     </>
   );
 }
