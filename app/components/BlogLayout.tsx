@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import Footer from "./Footer";
-import FragmentComponent from "./FragmentComponent";
+import Footer from "./Footer.tsx";
+import FragmentComponent from "./FragmentComponent.tsx";
 
 type BlogLayoutProps = {
   children: ReactNode;

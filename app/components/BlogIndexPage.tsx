@@ -1,7 +1,5 @@
 import { readdir } from "node:fs/promises";
 
-import BlogPostPage from "./BlogPostPage";
-
 async function BlogIndexPage() {
   const posts = await readdir("posts");
   const slugs = posts.map((post) => post.slice(0, post.lastIndexOf(".")));

@@ -1,6 +1,6 @@
 import { renderToString } from "react-dom/server";
 
-import Router from "./components/Router";
+import Router from "./app/components/Router";
 
 async function renderJSXToClientJSX(
   jsx: unknown
@@ -81,7 +81,7 @@ async function sendHtml(jsx: unknown) {
       }
     }
     </script>
-    <script type="module" src="/client.js"></script>
+    <script type="module" src="/dist/app/client.js"></script>
 `;
 
   const response = new Response(html);
@@ -105,11 +105,7 @@ const server = Bun.serve({
     try {
       const url = new URL(req.url, `http://${req.headers.get("host")}`);
 
-      if (url.pathname.includes(".ico")) {
-        return new Response("", { status: 404 });
-      }
-
-      if (url.pathname.includes("comments")) {
+      if (url.pathname.includes("api/comments")) {
         const formData = await req.formData();
         const name = formData.get("name") as string;
         const content = formData.get("content") as string;
@@ -139,19 +135,28 @@ const server = Bun.serve({
         });
       }
 
-      if (url.pathname.includes("assets")) {
-        const body = await Bun.file(url.pathname.slice(1)).arrayBuffer();
-        const response = new Response(body);
-        response.headers.set("Content-Type", "image/jpeg");
-        return response;
+      if (url.pathname.includes(".ico")) {
+        return new Response("", { status: 404 });
       }
 
-      if (url.pathname.includes("client.js")) {
-        const body = await Bun.file(url.pathname.slice(1)).text();
-        const response = new Response(body);
-        response.headers.set("Content-Type", "text/javascript");
+      if (url.pathname.includes("dist")) {
+        const file = Bun.file(`./dist${url.pathname.slice(5)}`);
 
-        return response;
+        const exists = await file.exists();
+
+        if (!exists) return new Response("Not Found", { status: 404 });
+
+        return new Response(file);
+      }
+
+      if (url.pathname.includes("assets")) {
+        const file = Bun.file(`./assets/${url.pathname.slice(7)}`);
+
+        const exists = await file.exists();
+
+        if (!exists) return new Response("Not Found", { status: 404 });
+
+        return new Response(file);
       }
 
       if (url.searchParams.has("jsx")) {

@@ -1,3 +1,5 @@
+import { Like } from "./Like.tsx";
+
 type CommentsProps = {
   slug: string;
 };
@@ -12,7 +14,7 @@ async function Comments({ slug }: CommentsProps) {
   return (
     <section>
       <h1>Comments</h1>
-      <form action={`/comments/${slug}`}>
+      <form action={`/api/comments/${slug}`}>
         <div>
           <label htmlFor="name">Name:</label>
           <input type="text" id="name" name="name" />
@@ -28,6 +30,7 @@ async function Comments({ slug }: CommentsProps) {
         <article key={index}>
           <h2>{comment.name}</h2>
           <p>{comment.content}</p>
+          <Like />
         </article>
       ))}
     </section>

@@ -1,8 +1,6 @@
-import type { ReactNode } from "react";
-
-import BlogIndexPage from "./BlogIndexPage";
-import BlogPostPage from "./BlogPostPage";
-import BlogLayout from "./BlogLayout";
+import BlogIndexPage from "./BlogIndexPage.tsx";
+import BlogPostPage from "./BlogPostPage.tsx";
+import BlogLayout from "./BlogLayout.tsx";
 
 function Router({ url }) {
   let page = null;

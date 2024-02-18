@@ -1,6 +1,6 @@
 import Markdown from "react-markdown";
-import Image from "./Image";
-import Comments from "./Comments";
+import Image from "./Image.tsx";
+import Comments from "./Comments.tsx";
 
 type BlogPostPageProps = {
   slug: string;
