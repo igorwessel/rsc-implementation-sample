@@ -11,7 +11,9 @@ async function BlogIndexPage() {
       <h1>My Blog!</h1>
       <div>
         {slugs.map((slug, index) => (
-          <BlogPostPage key={index} slug={slug} />
+          <h2 key={index}>
+            <a href={`/${slug}`}>{slug}</a>
+          </h2>
         ))}
       </div>
     </section>

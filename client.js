@@ -66,3 +66,21 @@ window.addEventListener(
   },
   true
 );
+
+window.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const form = e.target;
+  const formData = new FormData(form);
+  const post = currentPathName.slice(1);
+
+  fetch(`comments/${post}`, {
+    method: "POST",
+    body: formData,
+  });
+
+  form.reset();
+
+  const clientJSX = await fetchClientJsx(post);
+  root.render(clientJSX);
+});

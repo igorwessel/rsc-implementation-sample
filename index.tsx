@@ -105,8 +105,39 @@ const server = Bun.serve({
     try {
       const url = new URL(req.url, `http://${req.headers.get("host")}`);
 
-      if (url.pathname.includes(".ico"))
+      if (url.pathname.includes(".ico")) {
         return new Response("", { status: 404 });
+      }
+
+      if (url.pathname.includes("comments")) {
+        const formData = await req.formData();
+        const name = formData.get("name") as string;
+        const content = formData.get("content") as string;
+        const slug = url.pathname.split("/")[2];
+
+        const commentsDatabase = (await Bun.file(
+          "comments.json"
+        ).json()) as Record<
+          string,
+          { id: number; name: string; content: string }[]
+        >;
+
+        if (!commentsDatabase[slug]) {
+          commentsDatabase[slug] = [];
+        }
+
+        commentsDatabase[slug].push({
+          id: commentsDatabase[slug].length + 1,
+          name,
+          content,
+        });
+
+        await Bun.write("comments.json", JSON.stringify(commentsDatabase));
+
+        return new Response("New comment!", {
+          status: 201,
+        });
+      }
 
       if (url.pathname.includes("assets")) {
         const body = await Bun.file(url.pathname.slice(1)).arrayBuffer();
