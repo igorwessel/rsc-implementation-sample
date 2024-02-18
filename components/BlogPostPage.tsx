@@ -1,4 +1,5 @@
 import Markdown from "react-markdown";
+import Image from "./Image";
 
 type BlogPostPageProps = {
   slug: string;
@@ -22,7 +23,7 @@ async function BlogPostPage({ slug }: BlogPostPageProps) {
         <a href={`/${slug}`}>{slug}</a>
       </h2>
       <article>
-        <Markdown>{content}</Markdown>
+        <Markdown components={{ img: Image }}>{content}</Markdown>
       </article>
     </section>
   );
