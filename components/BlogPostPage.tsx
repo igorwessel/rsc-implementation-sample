@@ -1,9 +1,11 @@
+import Markdown from "react-markdown";
+
 type BlogPostPageProps = {
   slug: string;
 };
 
 async function BlogPostPage({ slug }: BlogPostPageProps) {
-  const post = Bun.file(`posts/${slug}.txt`);
+  const post = Bun.file(`posts/${slug}.md`);
   const exist = await post.exists();
 
   if (!exist) {
@@ -19,7 +21,9 @@ async function BlogPostPage({ slug }: BlogPostPageProps) {
       <h2>
         <a href={`/${slug}`}>{slug}</a>
       </h2>
-      <article>{content}</article>
+      <article>
+        <Markdown>{content}</Markdown>
+      </article>
     </section>
   );
 }
