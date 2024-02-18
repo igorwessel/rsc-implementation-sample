@@ -2,11 +2,20 @@ import { hydrateRoot } from "react-dom/client";
 
 const root = hydrateRoot(document, getInitialClientJsx());
 
+const cache = new Map();
+
 let currentPathName = window.location.pathname;
 
-async function navigate(pathname) {
+async function navigate(pathname, { fresh = true }) {
   currentPathName = pathname;
-  const clientJSX = await fetchClientJsx(pathname);
+  let clientJSX;
+
+  if (fresh) {
+    clientJSX = await fetchClientJsx(pathname);
+    cache.set(pathname, clientJSX);
+  } else {
+    clientJSX = cache.get(pathname);
+  }
 
   if (pathname === currentPathName) {
     root.render(clientJSX);
@@ -54,7 +63,7 @@ window.addEventListener(
 
     e.preventDefault();
     window.history.pushState(null, "", href);
-    navigate(href);
+    navigate(href, { fresh: true });
   },
   true
 );
@@ -62,7 +71,7 @@ window.addEventListener(
 window.addEventListener(
   "popstate",
   () => {
-    navigate(window.location.pathname);
+    navigate(window.location.pathname, { fresh: false });
   },
   true
 );
