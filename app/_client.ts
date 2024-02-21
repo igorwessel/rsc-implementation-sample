@@ -1,4 +1,5 @@
 import { hydrateRoot } from "react-dom/client";
+import { createFromFetch } from "react-server-dom-webpack/client";
 
 const root = hydrateRoot(document, getInitialClientJsx());
 
@@ -11,7 +12,8 @@ async function navigate(pathname, { fresh = true }) {
   let clientJSX;
 
   if (fresh) {
-    clientJSX = await fetchClientJsx(pathname);
+    clientJSX = await createFromFetch(pathname);
+    console.log(clientJSX);
     cache.set(pathname, clientJSX);
   } else {
     clientJSX = cache.get(pathname);

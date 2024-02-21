@@ -1,11 +1,17 @@
 import { type BunPlugin } from "bun";
 import pkg from "./package.json";
 
+type ImportManifest = {
+  id: string;
+  chunks: Array<string>;
+  name: string;
+};
+
 const transpiler = new Bun.Transpiler({
   loader: "tsx",
 });
 
-const appDir = new URL("./app/components/", import.meta.url);
+const appDir = new URL("./app/", import.meta.url);
 const buildDir = new URL("./dist/", import.meta.url);
 
 function resolveAppPath(path: string) {
@@ -30,16 +36,21 @@ export const rscResolveClient: BunPlugin = {
   name: "rsc-resolve-client-imports",
   setup(builder) {
     builder.onResolve({ filter: /\.tsx$/ }, async (args) => {
-      const path = resolveAppPath(args.path);
+      const path = args.path.includes("app")
+        ? args.path
+        : resolveAppPath(args.path);
+
       const content = await Bun.file(path).text();
 
-      if (!content.startsWith("'use client'")) return;
+      if (!content.startsWith("'use client'")) {
+        return;
+      }
 
       clientEntryPoints.add(path);
 
       return {
         external: true,
-        path,
+        path: resolveAppPath(args.path).replace(/\.tsx$/, ".js"),
       };
     });
   },
@@ -47,44 +58,51 @@ export const rscResolveClient: BunPlugin = {
 
 export async function build() {
   const server = await Bun.build({
-    entrypoints: [resolveAppPath("Router.tsx")],
+    entrypoints: ["./server.tsx"],
     outdir: "dist",
     external: Object.keys(pkg.dependencies),
     plugins: [rscResolveClient],
-    target: "bun",
+    format: "esm",
+    target: "node",
   });
 
+  console.log(clientEntryPoints);
+
   const client = await Bun.build({
-    entrypoints: ["./app/client.ts", ...clientEntryPoints],
+    entrypoints: ["./_client.ts", ...clientEntryPoints],
     external: Object.keys(pkg.dependencies),
+    outdir: "dist",
     splitting: true,
     target: "browser",
   });
 
-  for (const output of client.outputs) {
-    const name = output.path.slice(output.path.lastIndexOf("/") + 1);
+  // for (const output of client.outputs) {
+  //   const name = output.path.slice(output.path.lastIndexOf("/") + 1);
 
-    if (name.includes("chunk")) continue;
+  //   if (name.includes("chunk")) continue;
 
-    let content = await output.text();
+  //   let content = await output.text();
 
-    const { exports } = transpiler.scan(content);
+  //   const { exports } = transpiler.scan(content);
 
-    for (const exp of exports) {
-      const key = output.path + name;
+  //   for (const exp of exports) {
+  //     const key = output.path + name;
+  //     console.log(output);
 
-      clientComponentsMap.set(key, {
-        id: `/dist/${resolveBuildDir(output.path)}`,
-        name,
-        async: true,
-      });
+  //     clientComponentsMap.set(key, {
+  //       id: `/dist/${output.path}`,
+  //       name,
+  //       async: true,
+  //     });
 
-      content += `
-      ${exp}.$$id = ${JSON.stringify(key)};
-      ${exp}.$$typeof = Symbol.for("react.client.reference");
-      `;
-    }
+  //     content += `
+  //     ${exp}.$$id = ${JSON.stringify(key)};
+  //     ${exp}.$$typeof = Symbol.for("react.client.reference");
+  //     `;
+  //   }
 
-    await Bun.write(resolveBuildDir(output.path), content);
-  }
+  //   await Bun.write(resolveBuildDir(output.path), content);
+  // }
 }
+
+build();
