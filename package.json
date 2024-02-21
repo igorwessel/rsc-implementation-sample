@@ -2,11 +2,17 @@
   "name": "rsc-implementation-sample",
   "version": "1.0.50",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun run --watch src/index.ts"
+    "dev": "bun --watch src/index.tsx",
+    "build": "bun build src/index.tsx",
+    "start": "NODE_ENV=production bun src/index.tsx",
+    "test": "bun test"
   },
   "dependencies": {
-    "elysia": "latest"
+    "@elysiajs/html": "^0.8.0",
+    "@elysiajs/static": "^0.8.1",
+    "elysia": "latest",
+    "react": "canary",
+    "react-dom": "canary"
   },
   "devDependencies": {
     "bun-types": "latest"

@@ -1,11 +1,5 @@
 import { type BunPlugin } from "bun";
-import pkg from "./package.json";
-
-type ImportManifest = {
-  id: string;
-  chunks: Array<string>;
-  name: string;
-};
+import pkg from "../package.json";
 
 const transpiler = new Bun.Transpiler({
   loader: "tsx",
@@ -76,33 +70,33 @@ export async function build() {
     target: "browser",
   });
 
-  // for (const output of client.outputs) {
-  //   const name = output.path.slice(output.path.lastIndexOf("/") + 1);
+  for (const output of client.outputs) {
+    const name = output.path.slice(output.path.lastIndexOf("/") + 1);
 
-  //   if (name.includes("chunk")) continue;
+    if (name.includes("chunk")) continue;
 
-  //   let content = await output.text();
+    let content = await output.text();
 
-  //   const { exports } = transpiler.scan(content);
+    const { exports } = transpiler.scan(content);
 
-  //   for (const exp of exports) {
-  //     const key = output.path + name;
-  //     console.log(output);
+    for (const exp of exports) {
+      const key = output.path + name;
+      console.log(output);
 
-  //     clientComponentsMap.set(key, {
-  //       id: `/dist/${output.path}`,
-  //       name,
-  //       async: true,
-  //     });
+      clientComponentsMap.set(key, {
+        id: `/dist/${output.path}`,
+        name,
+        async: true,
+      });
 
-  //     content += `
-  //     ${exp}.$$id = ${JSON.stringify(key)};
-  //     ${exp}.$$typeof = Symbol.for("react.client.reference");
-  //     `;
-  //   }
+      content += `
+      ${exp}.$$id = ${JSON.stringify(key)};
+      ${exp}.$$typeof = Symbol.for("react.client.reference");
+      `;
+    }
 
-  //   await Bun.write(resolveBuildDir(output.path), content);
-  // }
+    await Bun.write(resolveBuildDir(output.path), content);
+  }
 }
 
 build();

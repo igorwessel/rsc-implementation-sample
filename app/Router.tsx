@@ -1,6 +1,6 @@
-import BlogIndexPage from "./BlogIndexPage.tsx";
-import BlogPostPage from "./BlogPostPage.tsx";
-import BlogLayout from "./BlogLayout.tsx";
+import BlogIndexPage from "./BlogIndexPage";
+import BlogPostPage from "./BlogPostPage";
+import BlogLayout from "./BlogLayout";
 
 function Router({ url }) {
   let page = null;
